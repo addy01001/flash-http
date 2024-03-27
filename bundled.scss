@@ -1,0 +1,33 @@
+.quick_container-57e6b80 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.top_input-57e6b80 {
+    display: flex;
+    background-color: black;
+    padding: 2px;
+    input {
+        width: 70%;
+    }
+    button {
+        margin-left: auto;
+    }
+}
+
+.textarea-57e6b80 {
+    width: 99%;
+    height: 40vh;
+    background-color: black;
+    resize: none;
+    color: white;
+}
+
+.field_nav-57e6b80 {
+    display: flex;
+    gap: 20px;
+    div {
+        cursor: pointer;
+    }
+}
