@@ -2,8 +2,11 @@ use leptos::{leptos_dom::logging::console_log, *};
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str, Value};
+use serde_json::{from_str, Map, Value};
 use wasm_bindgen::prelude::*;
+
+use crate::components::response::Response;
+
 import_crate_style!(style, "src/quick.module.scss");
 
 #[wasm_bindgen]
@@ -18,11 +21,11 @@ struct RequestArgs<'a> {
     method: &'a str,
 }
 
-#[derive(Serialize, Deserialize)]
-struct HttpResponse<'a> {
-    headers: &'a str,
-    body: &'a str,
-    code: i32,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HttpResponse {
+    pub headers: String,
+    pub body: String,
+    pub code: i32,
 }
 
 #[component]
@@ -32,7 +35,7 @@ pub fn QuickRequest() -> impl IntoView {
     let (body, set_body) = create_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
-    let (result, set_result) = create_signal(String::from("No Response"));
+    let (response, set_response) = create_signal(HttpResponse { headers: String::new(), body: String::new(), code: 0 });
 
     let change_menu = move |val: String| {
         set_menu.set(val);
@@ -64,7 +67,10 @@ pub fn QuickRequest() -> impl IntoView {
             let args = to_value(&RequestArgs { url: &name, method: method.get().as_str() }).unwrap();
             // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
             let new_msg = invoke("request", args).await.as_string().expect("Something went wrong");
-            set_result.set(new_msg);
+            // set_result.set(new_msg);
+
+            let res_struct: HttpResponse = from_str(&new_msg).unwrap();
+            set_response.set(res_struct);
         });
         set_loader.set(false);
     };
@@ -75,6 +81,18 @@ pub fn QuickRequest() -> impl IntoView {
         } else {
             "Send"
         }
+    };
+
+    let get_result_body = move || {
+        return response.get().body;
+    };
+
+    let get_code = move || {
+        if response.get().code == 0{
+            return String::new(); 
+        } else {
+            return response.get().code.to_string();
+        };
     };
 
     let dynamic_component = move|| {
@@ -111,8 +129,7 @@ pub fn QuickRequest() -> impl IntoView {
             </div>
             {dynamic_component}
             <div>
-                <h5>Response</h5>
-                {move || result.get()}
+                <Response response= response/>
             </div>
         </div>
     }

@@ -7,7 +7,7 @@ use tauri::api::http::{ ClientBuilder, HttpRequestBuilder, ResponseType };
 struct HttpResponse<'a> {
     headers: &'a str,
     body: &'a str,
-    code: i32,
+    code: u16,
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -32,10 +32,9 @@ async fn request(method: String, url: String) -> String {
         let response_struct = HttpResponse {
             headers: &headers.as_str(),
             body: body.data.as_str().unwrap(),
-            code: 200
+            code: body.status
         };
-        
-        format!("{:?}", serde_json::to_string(&response_struct).unwrap())
+        serde_json::to_string(&response_struct).unwrap()
     } else {
         format!("Hello, Rust! You've been greeted from Rust!")
     }
