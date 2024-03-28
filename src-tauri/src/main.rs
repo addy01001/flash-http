@@ -36,7 +36,7 @@ async fn request(method: String, url: String, body: String) -> String {
             body: body.data.as_str().unwrap(),
             code: body.status
         };
-        serde_json::to_string(&response_struct).unwrap()
+        serde_json::to_string_pretty(&response_struct).unwrap()
     } else {
         format!("Hello, Rust! You've been greeted from Rust!")
     }

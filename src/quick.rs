@@ -1,11 +1,11 @@
-use leptos::{leptos_dom::logging::console_log, *};
+use leptos::*;
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Map, Value};
 use wasm_bindgen::prelude::*;
 
-use crate::components::response::Response;
+use crate::components::{header::Header, response::Response};
 
 import_crate_style!(style, "src/quick.module.scss");
 
@@ -29,8 +29,21 @@ pub struct HttpResponse {
     pub code: i32,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HttpHeaders {
+    pub value: String,
+    pub key: String
+}
+
+impl HttpHeaders {
+    pub fn new()->HttpHeaders {
+        HttpHeaders{ value: String::new(), key: String::new() }
+    }
+}
+
 #[component]
 pub fn QuickRequest() -> impl IntoView {
+    let (http_headers, set_http_headers) = create_signal(vec![HttpHeaders::new()]);
     let (url, set_url) = create_signal(String::new());
     let (method, set_method) = create_signal(String::from("POST"));
     let (body, set_body) = create_signal(String::new());
@@ -52,7 +65,7 @@ pub fn QuickRequest() -> impl IntoView {
         set_method.set(v);
     };
 
-    let update_body = move |ev| {
+    let update_body = move |ev: ev::Event| {
         let v = event_target_value(&ev);
         set_body.set(v);
     };
@@ -84,18 +97,6 @@ pub fn QuickRequest() -> impl IntoView {
         }
     };
 
-    let get_result_body = move || {
-        return response.get().body;
-    };
-
-    let get_code = move || {
-        if response.get().code == 0{
-            return String::new(); 
-        } else {
-            return response.get().code.to_string();
-        };
-    };
-
     let dynamic_component = move|| {
         if menu.get().eq("Body") {
             view! {
@@ -103,7 +104,14 @@ pub fn QuickRequest() -> impl IntoView {
                     <textarea class=style::textarea on:input=update_body value=body />
                 </div>
             }
-        } else {
+        } else if menu.get().eq("Headers") {
+            view! {
+                <div>
+                    <Header http_headers=http_headers set_http_headers=set_http_headers/>
+                </div>
+            }
+        } 
+        else {
             view! {
                 <div>Build in progress</div>
             }

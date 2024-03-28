@@ -1,5 +1,4 @@
-use leptos::{leptos_dom::logging::console_log, *};
-use serde_json::{json, Value};
+use leptos::*;
 use stylance::import_crate_style;
 use crate::quick::HttpResponse;
 import_crate_style!(style, "src/components/response.module.scss");
@@ -35,7 +34,7 @@ pub fn Response(
     };
 
     let dynamic_component = move|| {
-        if(menu.get().eq("Headers")) {
+        if menu.get().eq("Headers") {
             view! {
                 <div>{move || get_result_header()}</div>
             }
