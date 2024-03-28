@@ -1,4 +1,5 @@
 use leptos::{leptos_dom::logging::console_log, *};
+use serde_json::{json, Value};
 use stylance::import_crate_style;
 use crate::quick::HttpResponse;
 import_crate_style!(style, "src/components/response.module.scss");
@@ -46,11 +47,15 @@ pub fn Response(
     };
 
     view! {
-        <h5>Response {move || get_code()}</h5>
-            <div class=style::response_nav>
-                <div on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>
-                <div on:click = move|_|{ change_menu(String::from("Body")); }>Body</div>
-            </div>
-            {move|| dynamic_component()}
+        <div class=style::response_container>
+            <h5>Response {move || get_code()}</h5>
+                <div class=style::response_nav>
+                    <div on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>
+                    <div on:click = move|_|{ change_menu(String::from("Body")); }>Body</div>
+                </div>
+                <div class=style::response_section>
+                    {move|| dynamic_component()}
+                </div>
+        </div>
     }
 }

@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use serde::{Deserialize, Serialize};
-use tauri::api::http::{ ClientBuilder, HttpRequestBuilder, ResponseType };
+use tauri::api::http::{ Body, ClientBuilder, HttpRequestBuilder, ResponseType };
 
 #[derive(Serialize, Deserialize)]
 struct HttpResponse<'a> {
@@ -17,13 +17,15 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn request(method: String, url: String) -> String {
+async fn request(method: String, url: String, body: String) -> String {
     let client = ClientBuilder::new()
         .max_redirections(3)
         .build()
         .unwrap();
 
-    let request_instance = HttpRequestBuilder::new(method, url).expect("Unreachable runtime");
+    let request_instance = HttpRequestBuilder::new(method, url).expect("Unreachable runtime").body(Body::Text(body));
+    // request_instance
+
     let request = request_instance.response_type(ResponseType::Text);
 
     if let Ok(response) = client.send(request).await {

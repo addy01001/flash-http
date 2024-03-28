@@ -6,3 +6,13 @@
         cursor: pointer;
     }
 }
+
+.response_container {
+    width: 100%;
+}
+
+.response_section {
+    height: 20vh;
+    width: 100%;
+    overflow-y: auto;
+}

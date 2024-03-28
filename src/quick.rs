@@ -19,6 +19,7 @@ extern "C" {
 struct RequestArgs<'a> {
     url: &'a str,
     method: &'a str,
+    body: &'a str,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -31,7 +32,7 @@ pub struct HttpResponse {
 #[component]
 pub fn QuickRequest() -> impl IntoView {
     let (url, set_url) = create_signal(String::new());
-    let (method, set_method) = create_signal(String::from("GET"));
+    let (method, set_method) = create_signal(String::from("POST"));
     let (body, set_body) = create_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
@@ -64,7 +65,7 @@ pub fn QuickRequest() -> impl IntoView {
                 return;
             }
 
-            let args = to_value(&RequestArgs { url: &name, method: method.get().as_str() }).unwrap();
+            let args = to_value(&RequestArgs { url: &name, method: method.get().as_str(), body: body.get().as_str() }).unwrap();
             // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
             let new_msg = invoke("request", args).await.as_string().expect("Something went wrong");
             // set_result.set(new_msg);
