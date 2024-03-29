@@ -5,7 +5,7 @@ import_crate_style!(style, "src/components/response.module.scss");
 
 #[component]
 pub fn Response(
-    response: ReadSignal<HttpResponse>
+    response: RwSignal<HttpResponse>
 ) -> impl IntoView {
 
     let (menu, set_menu) = create_signal(String::from("Body"));

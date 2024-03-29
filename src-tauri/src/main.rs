@@ -1,7 +1,10 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use std::{collections::HashMap, str::FromStr};
+
 use serde::{Deserialize, Serialize};
-use tauri::api::http::{ Body, ClientBuilder, HttpRequestBuilder, ResponseType };
+use tauri::http::{header::{HeaderMap, HeaderValue}, Method};
+use tauri_plugin_http::reqwest;
 
 #[derive(Serialize, Deserialize)]
 struct HttpResponse<'a> {
@@ -17,33 +20,49 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn request(method: String, url: String, body: String) -> String {
-    let client = ClientBuilder::new()
-        .max_redirections(3)
-        .build()
-        .unwrap();
+async fn request(
+    method: String,
+    url: String,
+    body: String,
+    headers: HashMap<String, String>,
+) -> String {
+    let client = reqwest::Client::new();
 
-    let request_instance = HttpRequestBuilder::new(method, url).expect("Unreachable runtime").body(Body::Text(body));
-    // request_instance
+    let mut header = HeaderMap::new();
 
-    let request = request_instance.response_type(ResponseType::Text);
+    headers.into_iter().for_each(|(k, v)| {
+        let static_key: &'static str = Box::leak(k.into_boxed_str());
+        let static_val: &'static str = Box::leak(v.into_boxed_str());
 
-    if let Ok(response) = client.send(request).await {
-        let body= response.read().await.expect("Something went wrong");
-        let headers = format!("{:?}", body.headers);
+        header.insert(static_key, HeaderValue::from_str(static_val).unwrap());
+    });
+
+    header.append("content-type", HeaderValue::from_str("application/json").unwrap());
+
+    let res = client.request(Method::from_str(method.as_str()).unwrap(), url)
+        .body(body)
+        .headers(header);
+
+
+    if let Ok(response) = res.send().await {
+        let headers = format!("{:?}", response.headers());
+        let status = response.status();
+        let body = response.text().await.expect("Parse error");
         let response_struct = HttpResponse {
             headers: &headers.as_str(),
-            body: body.data.as_str().unwrap(),
-            code: body.status
+            body: &body,
+            code: status.as_u16(),
         };
         serde_json::to_string_pretty(&response_struct).unwrap()
     } else {
-        format!("Hello, Rust! You've been greeted from Rust!")
+        format!("Something went wrong!")
     }
 }
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![greet, request])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
