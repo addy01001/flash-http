@@ -5,34 +5,24 @@ import_crate_style!(style, "src/components/params.module.scss");
 
 #[component]
 pub fn Params(
-    http_params: ReadSignal<Vec<HttpHeaders>>, set_http_params: WriteSignal<Vec<HttpHeaders>>
+    http_params: RwSignal<Vec<HttpHeaders>>, url: RwSignal<String>
 )->impl IntoView {
     let add_column = move|| {
-        let mut new_value = http_params.get_untracked().clone();
+        let mut new_value = http_params.get().clone();
         new_value.push(HttpHeaders::new());
-        set_http_params.set(new_value);
+        http_params.set(new_value);
     };
 
     let handle_vector_update = move|ev: ev::Event, index: usize|{
-        if index == http_params.get().len() {
+        if index == http_params.get_untracked().len() {
             add_column();
         }
-
-        let mut new_value = http_params.get_untracked().clone();
-        let v = event_target_value(&ev);
-        new_value[index-1].key = v;
-        set_http_params.set(new_value);
     };
 
     let handle_vector_update_value = move|ev: ev::Event, index: usize|{
         if index == http_params.get().len() {
             add_column();
         }
-
-        let mut new_value = http_params.get_untracked().clone();
-        let v = event_target_value(&ev);
-        new_value[index-1].value = v;
-        set_http_params.set(new_value);
     };
 
     let dynamic_component = move|| {
@@ -42,8 +32,8 @@ pub fn Params(
                 index+=1;
                 return view!{
                     <tr>
-                        <td><input on:input = move|ev|{ handle_vector_update(ev, index) } prop:value=e.key /></td>
-                        <td><input on:input = move|ev|{ handle_vector_update_value(ev, index) } prop:value=e.value /></td>
+                        <td><input on:input = move|ev|{ e.key.set(event_target_value(&ev)) } prop:value=e.key /></td>
+                        <td><input on:input = move|ev|{ e.value.set(event_target_value(&ev)) } prop:value=e.value /></td>
                         <td><input></input></td>
                     </tr>
                 };
@@ -60,5 +50,6 @@ pub fn Params(
             </tr>
             {move|| dynamic_component()}
         </table>
+        <button on:click=move|_|{ add_column() }>Add</button>
     }
 }
