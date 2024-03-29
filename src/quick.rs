@@ -65,7 +65,7 @@ pub fn QuickRequest() -> impl IntoView {
         url.set(v);
         let parsed_url = Url::parse(url.get().as_str()).expect("Failed to parse URL");
 
-        let mut temp = vec![HttpHeaders::new()];
+        let mut temp: Vec<HttpHeaders> = vec![];
         parsed_url.query_pairs()
             .for_each(|(key, value)| {
                 temp.push(HttpHeaders{ value: create_rw_signal(value.to_string()), key: create_rw_signal(key.to_string()) })
@@ -98,7 +98,6 @@ pub fn QuickRequest() -> impl IntoView {
                 return;
             }
 
-            console_log(body.get().as_str());
             let args = to_value(&RequestArgs { url: &name, method: method.get().as_str(), body: body.get().as_str(), headers: header_map }).unwrap();
             // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
             let new_msg = invoke("request", args).await.as_string().expect("Something went wrong");
