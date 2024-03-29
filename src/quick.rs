@@ -1,8 +1,8 @@
-use leptos::*;
+use leptos::{html::Textarea, *};
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str, Map, Value};
+use serde_json::from_str;
 use wasm_bindgen::prelude::*;
 
 use crate::components::{header::Header, response::Response};
@@ -50,7 +50,7 @@ pub fn QuickRequest() -> impl IntoView {
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
     let (response, set_response) = create_signal(HttpResponse { headers: String::new(), body: String::new(), code: 0 });
-
+    
     let change_menu = move |val: String| {
         set_menu.set(val);
     };
@@ -101,7 +101,7 @@ pub fn QuickRequest() -> impl IntoView {
         if menu.get().eq("Body") {
             view! {
                 <div>
-                    <textarea class=style::textarea on:input=update_body value=body />
+                    <textarea class=style::textarea on:input=update_body prop:value=body />
                 </div>
             }
         } else if menu.get().eq("Headers") {
@@ -121,14 +121,14 @@ pub fn QuickRequest() -> impl IntoView {
     view! {
         <div class=style::quick_container>
             <div class=style::top_input>
-                <select value=method on:input=update_method id="methods" name="methods">
+                <select prop:value=method on:input=update_method id="methods" name="methods">
                     <option value="POST">Post</option>
                     <option value="PUT">Put</option>
                     <option value="GET">Get</option>
                     <option value="PATCH">Patch</option>
                     <option value="DELETE">Delete</option>
                 </select>
-                <input on:input=update_url value=url placeholder="Enter URL"></input>
+                <input on:input=update_url prop:value=url placeholder="Enter URL"></input>
                 <button on:click=handle_submit>{message}</button>
             </div>
             <div class=style::field_nav>
