@@ -1,11 +1,11 @@
-use leptos::{html::Textarea, *};
+use leptos::*;
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
 use wasm_bindgen::prelude::*;
 
-use crate::components::{header::Header, response::Response};
+use crate::components::{header::Header, params::Params, response::Response};
 
 import_crate_style!(style, "src/quick.module.scss");
 
@@ -43,6 +43,7 @@ impl HttpHeaders {
 
 #[component]
 pub fn QuickRequest() -> impl IntoView {
+    let (http_params, set_http_params) = create_signal(vec![HttpHeaders::new()]);
     let (http_headers, set_http_headers) = create_signal(vec![HttpHeaders::new()]);
     let (url, set_url) = create_signal(String::new());
     let (method, set_method) = create_signal(String::from("POST"));
@@ -107,13 +108,17 @@ pub fn QuickRequest() -> impl IntoView {
         } else if menu.get().eq("Headers") {
             view! {
                 <div>
-                    <Header http_headers=http_headers set_http_headers=set_http_headers/>
+                    <div>Headers</div>
+                    <Header http_headers set_http_headers/>
                 </div>
             }
         } 
         else {
             view! {
-                <div>Build in progress</div>
+                <div>
+                    <div>Query params</div>
+                    <Params set_http_params http_params/>   
+                </div>
             }
         }
     };
@@ -136,7 +141,7 @@ pub fn QuickRequest() -> impl IntoView {
                 <div on:click = move |_|{ change_menu(String::from("Headers")); }>Headers</div>
                 <div on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
             </div>
-            {dynamic_component}
+            {move || dynamic_component()}
             <div>
                 <Response response= response/>
             </div>

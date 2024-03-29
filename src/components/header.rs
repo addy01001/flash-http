@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use stylance::import_crate_style;
 use leptos::*;
 use crate::quick::HttpHeaders;
@@ -23,7 +21,8 @@ pub fn Header(
 
         let mut new_value = http_headers.get_untracked().clone();
         let v = event_target_value(&ev);
-        new_value[index].key = v;
+        new_value[index-1].key = v;
+        set_http_headers.set(new_value);
     };
 
     let handle_vector_update_value = move|ev: ev::Event, index: usize|{
@@ -33,18 +32,19 @@ pub fn Header(
 
         let mut new_value = http_headers.get_untracked().clone();
         let v = event_target_value(&ev);
-        new_value[index].value = v;
+        new_value[index-1].value = v;
+        set_http_headers.set(new_value);
     };
 
     let dynamic_component = move|| {
-        let mut index = -1;
+        let mut index = 0;
         http_headers.get().clone().into_iter()
             .map(|e|{
                 index+=1;
                 return view!{
                     <tr>
-                        <td><input value=e.key /></td>
-                        <td><input value=e.value /></td>
+                        <td><input on:input = move|ev|{ handle_vector_update(ev, index) } prop:value=e.key /></td>
+                        <td><input on:input = move|ev|{ handle_vector_update_value(ev, index) } prop:value=e.value /></td>
                         <td><input></input></td>
                     </tr>
                 };
