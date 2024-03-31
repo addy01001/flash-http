@@ -49,7 +49,8 @@ fn db_file_exists() -> bool {
 
 // Get the path where the database file should be located.
 fn get_db_path() -> String {
-    // let home_dir = home_dir().unwrap().to_str().unwrap();
+    let mut home_dir = home_dir().unwrap().to_str().unwrap().to_string();
 
-    "C://Users/Andrew/.config/flash-http/database.sqlite".to_string()
+    home_dir.push_str("/.config/flash-http/database.sqlite");
+    return home_dir;
 }
