@@ -9,6 +9,7 @@ pub struct History {
     pub url: String,
     pub body: String,
     pub headers: String,
+    pub method: String,
     pub created_at: String
 }
 
@@ -17,6 +18,7 @@ pub struct History {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct NewHistory {
     pub url: String,
+    pub method: String,
     pub body: String,
     pub headers: String
 }

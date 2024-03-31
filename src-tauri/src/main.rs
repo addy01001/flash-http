@@ -59,7 +59,7 @@ async fn request(
     let now = Instant::now();
     if let Ok(response) = res.send().await {
         let timing = now.elapsed();
-        let history = NewHistory {url: url.clone(), body: body.clone(), headers: serde_json::to_string(&headers).unwrap() };
+        let history = NewHistory {url: url.clone(), method: method.clone(), body: body.clone(), headers: serde_json::to_string(&headers).unwrap() };
         let connection = &mut estabilish_connection();
 
         diesel::insert_into(histories::table)
