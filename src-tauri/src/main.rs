@@ -5,6 +5,7 @@ use std::{collections::HashMap, str::FromStr, time::Instant};
 use serde::{Deserialize, Serialize};
 use tauri::http::{header::HeaderValue, HeaderMap, Method};
 use tauri_plugin_http::reqwest;
+mod db;
 
 #[derive(Serialize, Deserialize)]
 struct HttpResponse<'a> {
@@ -59,6 +60,12 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_sql::Builder::default().build())
+        .setup(|_app| {
+            // Initialize the database.
+            db::init();
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![greet, request])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

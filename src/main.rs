@@ -1,5 +1,6 @@
 mod app;
-mod quick;
+mod pages;
+mod layouts;
 mod utils;
 mod components;
 

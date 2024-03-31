@@ -10,7 +10,7 @@ use url::Url;
 
 use crate::{components::{header::Header, params::Params, response::Response}, utils::curl_parser};
 
-import_crate_style!(style, "src/quick.module.scss");
+import_crate_style!(style, "src/pages/quick.module.scss");
 
 #[wasm_bindgen]
 extern "C" {

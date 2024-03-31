@@ -1,6 +1,7 @@
 use stylance::import_crate_style;
 use leptos::*;
-use crate::quick::HttpHeaders;
+
+use crate::pages::quick::HttpHeaders;
 import_crate_style!(style, "src/components/header.module.scss");
 
 

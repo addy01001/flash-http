@@ -1,6 +1,7 @@
 use leptos::*;
 use stylance::import_crate_style;
-use crate::quick::HttpResponse;
+
+use crate::pages::quick::HttpResponse;
 import_crate_style!(style, "src/components/response.module.scss");
 
 #[component]
