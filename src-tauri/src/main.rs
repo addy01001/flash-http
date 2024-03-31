@@ -2,10 +2,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{collections::HashMap, str::FromStr, time::Instant};
 
+use diesel::{RunQueryDsl};
+use model::{History, NewHistory};
+use schema::histories;
 use serde::{Deserialize, Serialize};
 use tauri::http::{header::HeaderValue, HeaderMap, Method};
 use tauri_plugin_http::reqwest;
+
+use crate::db::estabilish_connection;
 mod db;
+mod schema;
+mod model;
 
 #[derive(Serialize, Deserialize)]
 struct HttpResponse<'a> {
@@ -22,6 +29,17 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
+async fn get_history() -> String {
+    use self::schema::histories::dsl::histories;
+    let connection = &mut estabilish_connection();
+    
+    let list = histories.load::<History>(connection)
+        .expect("Error loading users");
+
+    serde_json::to_string_pretty(&list).unwrap()
+}
+
+#[tauri::command]
 async fn request(
     method: String,
     url: String,
@@ -34,13 +52,21 @@ async fn request(
 
     header.append("content-type", HeaderValue::from_str("application/json").unwrap());
 
-    let res = client.request(Method::from_str(method.as_str()).unwrap(), url)
-        .body(body)
+    let res = client.request(Method::from_str(method.as_str()).unwrap(), url.clone())
+        .body(body.clone())
         .headers(header);
 
     let now = Instant::now();
     if let Ok(response) = res.send().await {
         let timing = now.elapsed();
+        let history = NewHistory {url: url.clone(), body: body.clone(), headers: serde_json::to_string(&headers).unwrap() };
+        let connection = &mut estabilish_connection();
+
+        diesel::insert_into(histories::table)
+            .values(&history)
+            .execute(connection)
+            .expect("Insert failed");
+
         let headers = format!("{:?}", response.headers());
         let status = response.status();
         let body = response.text().await.expect("Parse error");
@@ -66,7 +92,7 @@ fn main() {
             db::init();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, request])
+        .invoke_handler(tauri::generate_handler![greet, request, get_history])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

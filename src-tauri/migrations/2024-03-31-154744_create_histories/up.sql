@@ -1,0 +1,9 @@
+-- Your SQL goes here
+
+CREATE TABLE histories (
+  id INTEGER PRIMARY KEY,
+  headers TEXT NOT NULL,
+  body TEXT NOT NULL,
+  url TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
