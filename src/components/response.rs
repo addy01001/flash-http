@@ -25,6 +25,15 @@ pub fn Response(
         };
     };
 
+    let get_timing = move || {
+        if response.get().code == 0{
+            return String::new(); 
+        } else {
+            return response.get().timing.to_string();
+        };
+    };
+
+
     let change_menu = move |val: String| {
         set_menu.set(val);
     };
@@ -47,14 +56,17 @@ pub fn Response(
 
     view! {
         <div class=style::response_container>
-            <h5>Response {move || get_code()}</h5>
-                <div class=style::response_nav>
-                    <div on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>
-                    <div on:click = move|_|{ change_menu(String::from("Body")); }>Body</div>
-                </div>
-                <div class=style::response_section>
-                    {move|| dynamic_component()}
-                </div>
+            <h5>Response</h5>
+            <div>Code: {move || get_code()}</div>
+            <div>Time: {move || get_timing()}</div>
+            
+            <div class=style::response_nav>
+                <div on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>
+                <div on:click = move|_|{ change_menu(String::from("Body")); }>Body</div>
+            </div>
+            <div class=style::response_section>
+                {move|| dynamic_component()}
+            </div>
         </div>
     }
 }
