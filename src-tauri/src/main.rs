@@ -2,11 +2,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{collections::HashMap, str::FromStr, time::Instant};
 
-use diesel::RunQueryDsl;
+use diesel::{sql_types::Json, RunQueryDsl};
 use model::{History, NewHistory};
 use schema::histories;
 use serde::{Deserialize, Serialize};
-use tauri::http::{header::HeaderValue, HeaderMap, Method};
+use serde_json::json;
+use tauri::http::{header::HeaderValue, response, HeaderMap, Method};
 use tauri_plugin_http::reqwest;
 
 use crate::db::estabilish_connection;
@@ -81,8 +82,20 @@ async fn request(
             .expect("Insert failed");
 
         let headers = format!("{:?}", response.headers());
+        let header_map = response.headers();
+
+        let content_type= header_map.get("content-type").unwrap().to_str().unwrap();
         let status = response.status();
-        let body = response.text().await.expect("Parse error");
+
+        let mut body =String::new();
+        if content_type.contains("json") {
+            let body_json = json!(response.text().await.expect("Parse error"));
+            body = serde_json::to_string_pretty(&body_json).unwrap();
+        } else {
+            body = response.text().await.expect("Parse error");
+        }
+        
+
         let response_struct = HttpResponse {
             headers: &headers.as_str(),
             body: &body,
