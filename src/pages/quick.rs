@@ -10,7 +10,7 @@ use url::Url;
 
 use crate::{components::{header::Header, params::Params, response::Response}, utils::curl_parser};
 
-import_crate_style!(style, "src/quick.module.scss");
+import_crate_style!(style, "src/pages/quick.module.scss");
 
 #[wasm_bindgen]
 extern "C" {
@@ -42,7 +42,10 @@ pub struct HttpHeaders {
 
 impl HttpHeaders {
     pub fn new()->HttpHeaders {
-        HttpHeaders{ value: create_rw_signal(String::new()), key: create_rw_signal(String::new()) }
+        HttpHeaders{ 
+            value: create_rw_signal(String::new()), 
+            key: create_rw_signal(String::new()) 
+        }
     }
 }
 
@@ -51,7 +54,7 @@ pub fn QuickRequest() -> impl IntoView {
     let http_params = create_rw_signal(vec![HttpHeaders::new()]);
     let http_headers = create_rw_signal(vec![HttpHeaders::new()]);
     let url = create_rw_signal(String::new());
-    let (method, set_method) = create_signal(String::from("POST"));
+    let method = create_rw_signal(String::from("POST"));
     let body = create_rw_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
@@ -85,7 +88,7 @@ pub fn QuickRequest() -> impl IntoView {
 
     let update_method = move |ev| {
         let v = event_target_value(&ev);
-        set_method.set(v);
+        method.set(v);
     };
 
     let update_body = move |ev: ev::Event| {

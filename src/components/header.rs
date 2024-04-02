@@ -1,6 +1,7 @@
 use stylance::import_crate_style;
 use leptos::*;
-use crate::quick::HttpHeaders;
+
+use crate::pages::quick::HttpHeaders;
 import_crate_style!(style, "src/components/header.module.scss");
 
 
@@ -14,11 +15,11 @@ pub fn Header(
         http_headers.set(new_value);
     };
 
-    let handle_update = move|ev: ev::Event, index: usize|{
-        if index == http_headers.get_untracked().len() {
-            add_column();
-        }
-    };
+    // let handle_update = move|ev: ev::Event, index: usize|{
+    //     if index == http_headers.get_untracked().len() {
+    //         add_column();
+    //     }
+    // };
 
     let handle_delete = move|index: usize|{
         let mut new_value = http_headers.get().clone();

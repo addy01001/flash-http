@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use stylance::import_crate_style;
 use leptos::*;
 use url::Url;
-use crate::quick::HttpHeaders;
+
+use crate::pages::quick::HttpHeaders;
 import_crate_style!(style, "src/components/params.module.scss");
 
 fn add_query_params(base_url: &str, params: &HashMap<String, String>) -> String {

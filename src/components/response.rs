@@ -1,6 +1,7 @@
 use leptos::*;
 use stylance::import_crate_style;
-use crate::quick::HttpResponse;
+
+use crate::pages::quick::HttpResponse;
 import_crate_style!(style, "src/components/response.module.scss");
 
 #[component]
@@ -38,9 +39,9 @@ pub fn Response(
         set_menu.set(val);
     };
 
-    let to_render = move|| {
-        return response.get().code!=0;  
-    };
+    // let to_render = move|| {
+    //     return response.get().code!=0;  
+    // };
 
     let dynamic_component = move|| {
         if menu.get().eq("Headers") {
