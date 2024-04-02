@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use leptos::{leptos_dom::logging::console_log, *};
+use leptos::*;
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
@@ -8,9 +8,9 @@ use serde_json::from_str;
 use wasm_bindgen::prelude::*;
 use url::Url;
 
-use crate::components::{header::Header, params::Params, response::Response};
+use crate::{components::{header::Header, params::Params, response::Response}, utils::curl_parser};
 
-import_crate_style!(style, "src/quick.module.scss");
+import_crate_style!(style, "src/pages/quick.module.scss");
 
 #[wasm_bindgen]
 extern "C" {
@@ -31,6 +31,7 @@ pub struct HttpResponse {
     pub headers: String,
     pub body: String,
     pub code: i32,
+    pub timing: f64
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -41,20 +42,23 @@ pub struct HttpHeaders {
 
 impl HttpHeaders {
     pub fn new()->HttpHeaders {
-        HttpHeaders{ value: create_rw_signal(String::new()), key: create_rw_signal(String::new()) }
+        HttpHeaders{ 
+            value: create_rw_signal(String::new()), 
+            key: create_rw_signal(String::new()) 
+        }
     }
 }
 
 #[component]
 pub fn QuickRequest() -> impl IntoView {
     let http_params = create_rw_signal(vec![HttpHeaders::new()]);
-    let (http_headers, set_http_headers) = create_signal(vec![HttpHeaders::new()]);
+    let http_headers = create_rw_signal(vec![HttpHeaders::new()]);
     let url = create_rw_signal(String::new());
-    let (method, set_method) = create_signal(String::from("POST"));
+    let method = create_rw_signal(String::from("POST"));
     let body = create_rw_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
-    let response = create_rw_signal(HttpResponse { headers: String::new(), body: String::new(), code: 0 });
+    let response = create_rw_signal(HttpResponse { headers: String::new(), body: String::new(), code: 0, timing: 0.00 });
     
     let change_menu = move |val: String| {
         set_menu.set(val);
@@ -62,20 +66,29 @@ pub fn QuickRequest() -> impl IntoView {
 
     let update_url = move |ev| {
         let v = event_target_value(&ev);
+
+        if v.contains("curl --location") {
+            let new_url = curl_parser(&v);
+            url.set(new_url);
+            return;
+        }
+        
         url.set(v);
         let parsed_url = Url::parse(url.get().as_str()).expect("Failed to parse URL");
 
         let mut temp: Vec<HttpHeaders> = vec![];
         parsed_url.query_pairs()
             .for_each(|(key, value)| {
-                temp.push(HttpHeaders{ value: create_rw_signal(value.to_string()), key: create_rw_signal(key.to_string()) })
+                if !key.to_string().is_empty() {
+                    temp.push(HttpHeaders{ value: create_rw_signal(value.to_string()), key: create_rw_signal(key.to_string()) })
+                }
             });
         http_params.set(temp);
     };
 
     let update_method = move |ev| {
         let v = event_target_value(&ev);
-        set_method.set(v);
+        method.set(v);
     };
 
     let update_body = move |ev: ev::Event| {
@@ -128,7 +141,7 @@ pub fn QuickRequest() -> impl IntoView {
             view! {
                 <div>
                     <div>Headers</div>
-                    <Header http_headers set_http_headers/>
+                    <Header http_headers/>
                 </div>
             }
         } 
@@ -161,8 +174,13 @@ pub fn QuickRequest() -> impl IntoView {
                 <div on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
             </div>
             {move || dynamic_component()}
-            <div>
-                <Response response/>
+            <div>  
+                <Show
+                    when=move || { response.get().code != 0 }
+                    fallback=|| view! { <div></div> }
+                >
+                    <Response response/>
+                </Show>
             </div>
         </div>
     }
