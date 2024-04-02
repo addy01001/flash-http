@@ -1,4 +1,4 @@
-use leptos::{ component, create_resource, create_rw_signal, create_signal, html::data, spawn_local, view, CollectView, IntoView, SignalSet, Transition};
+use leptos::{ component, create_resource, view, CollectView, IntoView, Transition};
 use leptos_router::Outlet;
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
@@ -35,7 +35,7 @@ pub fn History() ->impl IntoView {
         return res_struct;
     }
 
-    let todo= create_resource(|| (), |_| async move { get_histories().await });
+    let histories= create_resource(|| (), |_| async move { get_histories().await });
     
     view! {
         <div class=style::main_container>
@@ -45,7 +45,7 @@ pub fn History() ->impl IntoView {
                     view! { <h2>"Loading..."</h2> }
                 }>
                 {move || {
-                        todo.map(|e|{
+                        histories.map(|e|{
                             e.into_iter()
                                 .map(|ele|{
                                     view! {

@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{collections::HashMap, str::FromStr, time::Instant};
 
-use diesel::{RunQueryDsl};
+use diesel::RunQueryDsl;
 use model::{History, NewHistory};
 use schema::histories;
 use serde::{Deserialize, Serialize};
@@ -37,6 +37,19 @@ async fn get_history() -> String {
         .expect("Error loading users");
 
     serde_json::to_string_pretty(&list).unwrap()
+}
+
+#[tauri::command]
+async fn get_history_by_id(id: i128) -> String {
+    use self::schema::histories::dsl::histories;
+    let connection = &mut estabilish_connection();
+    
+    // let history = histories.find(id)
+    //     .first(connection)
+    //     .expect("Error loading users");
+
+    // serde_json::to_string_pretty(&history).unwrap()
+    unimplemented!()
 }
 
 #[tauri::command]

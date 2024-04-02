@@ -39,9 +39,9 @@ pub fn Response(
         set_menu.set(val);
     };
 
-    let to_render = move|| {
-        return response.get().code!=0;  
-    };
+    // let to_render = move|| {
+    //     return response.get().code!=0;  
+    // };
 
     let dynamic_component = move|| {
         if menu.get().eq("Headers") {
