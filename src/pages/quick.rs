@@ -42,7 +42,10 @@ pub struct HttpHeaders {
 
 impl HttpHeaders {
     pub fn new()->HttpHeaders {
-        HttpHeaders{ value: create_rw_signal(String::new()), key: create_rw_signal(String::new()) }
+        HttpHeaders{ 
+            value: create_rw_signal(String::new()), 
+            key: create_rw_signal(String::new()) 
+        }
     }
 }
 

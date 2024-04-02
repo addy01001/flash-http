@@ -35,6 +35,18 @@ pub fn History() ->impl IntoView {
         return res_struct;
     }
 
+    let formated_url=move|s: String| {
+        match s.get(0..20) {
+            Some(first_20_chars) => {
+                let ret_str= first_20_chars.to_string() + "...";
+                return ret_str;
+            }
+            None => {
+                return s;
+            }
+        }
+    };
+
     let histories= create_resource(|| (), |_| async move { get_histories().await });
     
     view! {
@@ -51,7 +63,7 @@ pub fn History() ->impl IntoView {
                                     view! {
                                         <div class=style::history_item>
                                             <div>{ele.headers.clone()}</div>
-                                            <div>{ele.url.clone()}</div>
+                                            <div>{formated_url(ele.url.clone())}</div>
                                         </div>
                                     }
                                 })
