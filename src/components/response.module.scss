@@ -11,8 +11,45 @@
     width: 100%;
 }
 
+.body_container {
+    white-space: pre-line;
+    pre {
+        white-space: pre-wrap;
+    }
+}
+
 .response_section {
     height: 20vh;
     width: 100%;
     overflow-y: auto;
+}
+
+
+.headers {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.headers td, .headers th {
+  border: 1px solid #ddd;
+  padding: 8px;
+  height: 20px;
+}
+
+.desc_div {
+  background-color: black;
+  width: 100%;
+  display: flex;
+  button {
+    margin-left: auto;
+  }
+}
+
+.headers th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  // background-color: #04AA6D;
+  color: white;
 }
