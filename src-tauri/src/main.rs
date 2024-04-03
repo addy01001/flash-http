@@ -1,19 +1,17 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{collections::HashMap, str::FromStr, time::Instant};
-
 use diesel::{sql_types::Json, RunQueryDsl};
 use model::{History, NewHistory};
 use schema::histories;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tauri::http::{header::HeaderValue, response, HeaderMap, Method};
-use tauri_plugin_http::reqwest;
+use tauri_plugin_http::reqwest::{self, header::{HeaderMap, HeaderName, HeaderValue}, Method};
 
 use crate::db::estabilish_connection;
 mod db;
-mod schema;
 mod model;
+mod schema;
 
 #[derive(Serialize, Deserialize)]
 struct HttpResponse<'a> {
@@ -62,7 +60,12 @@ async fn request(
 ) -> String {
     let client = reqwest::Client::new();
 
-    let mut header = HeaderMap::try_from(&headers).expect("Cast failed");
+    let mut header = HeaderMap::new();
+    headers.clone().into_iter()
+        .for_each(|(k,v)|{
+            header.append(HeaderName::from_str(k.as_str()).unwrap(), HeaderValue::from_str(v.as_str()).unwrap());
+        });
+
 
     header.append("content-type", HeaderValue::from_str("application/json").unwrap());
 
