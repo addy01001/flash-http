@@ -1,0 +1,20 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master", "ci_test" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: addy01001/ubuntu_tauri_wasm:latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Rust Build
+      name: cargo build
+    - name: Tauri Build
+      run: cargo tauri build
+    - name: Run tests
+      run: cargo test --verbose
