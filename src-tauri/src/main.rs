@@ -56,6 +56,7 @@ async fn request(
     method: String,
     url: String,
     body: String,
+    // form_encoded: HashMap<String, String>,
     headers: HashMap<String, String>,
 ) -> String {
     let client = reqwest::Client::new();
@@ -69,6 +70,7 @@ async fn request(
 
     header.append("content-type", HeaderValue::from_str("application/json").unwrap());
 
+    // let form_encoded = serde_urlencoded::to_string(&form_encoded).expect("serialize issue");
     let res = client.request(Method::from_str(method.as_str()).unwrap(), url.clone())
         .body(body.clone())
         .headers(header);

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use leptos::*;
+use leptos::{leptos_dom::logging::console_log, *};
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use serde_json::from_str;
 use wasm_bindgen::prelude::*;
 use url::Url;
 
-use crate::{components::{header::Header, params::Params, response::Response}, utils::curl_parser};
+use crate::{components::{body::BodyComponent, header::Header, params::Params, response::Response}, utils::curl_parser};
 
 import_crate_style!(style, "src/pages/quick.module.scss");
 
@@ -23,6 +23,7 @@ struct RequestArgs<'a> {
     url: &'a str,
     method: &'a str,
     body: &'a str,
+    // form_encoded: HashMap<String, String>,
     headers: HashMap<String, String>
 }
 
@@ -44,7 +45,7 @@ impl HttpHeaders {
     pub fn new()->HttpHeaders {
         HttpHeaders{ 
             value: create_rw_signal(String::new()), 
-            key: create_rw_signal(String::new()) 
+            key: create_rw_signal(String::new())
         }
     }
 }
@@ -52,9 +53,11 @@ impl HttpHeaders {
 #[component]
 pub fn QuickRequest() -> impl IntoView {
     let http_params = create_rw_signal(vec![HttpHeaders::new()]);
+    let http_form_encoded = create_rw_signal(vec![HttpHeaders::new()]);
     let http_headers = create_rw_signal(vec![HttpHeaders::new()]);
     let url = create_rw_signal(String::new());
-    let method = create_rw_signal(String::from("POST"));
+    let body_type: RwSignal<String> = create_rw_signal(String::from("raw"));
+    let method: RwSignal<String> = create_rw_signal(String::from("POST"));
     let body = create_rw_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
@@ -91,29 +94,39 @@ pub fn QuickRequest() -> impl IntoView {
         method.set(v);
     };
 
-    let update_body = move |ev: ev::Event| {
-        let v = event_target_value(&ev);
-        body.set(v);
-    };
-
     let handle_submit = move |_| {
         set_loader.set(true);
         let mut header_map: HashMap<String, String> = HashMap::new();
+        let mut encoded_map: HashMap<String, String> = HashMap::new();
         http_headers.get().into_iter()
             .for_each(|v|{
                 if !v.key.get().is_empty() {
                     header_map.insert(v.key.get(), v.value.get());
                 }
             });
+
+        http_form_encoded.get().into_iter()
+            .for_each(|v|{
+                if !v.key.get().is_empty() {
+                    encoded_map.insert(v.key.get(), v.value.get());
+                }
+            });
+            console_log("Started call");
         spawn_local(async move {
             let name = url.get_untracked();
             if name.is_empty() {
                 return;
             }
 
-            let args = to_value(&RequestArgs { url: &name, method: method.get().as_str(), body: body.get().as_str(), headers: header_map }).unwrap();
+            let args = to_value(&RequestArgs { 
+                // form_encoded: encoded_map, 
+                url: &name, 
+                method: method.get().as_str(), 
+                body: body.get().as_str(), 
+                headers: header_map 
+            }).unwrap();
             // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-            let new_msg = invoke("request", args).await.as_string().expect("Something went wrong");
+            let new_msg = invoke("request", args).await.as_string().expect("Request invoke failed");
             // set_result.set(new_msg);
 
             let res_struct: HttpResponse = from_str(&new_msg).unwrap();
@@ -134,7 +147,7 @@ pub fn QuickRequest() -> impl IntoView {
         if menu.get().eq("Body") {
             view! {
                 <div>
-                    <textarea class=style::textarea on:input=update_body prop:value=body />
+                    <BodyComponent body http_form_encoded menu=body_type/>
                 </div>
             }
         } else if menu.get().eq("Headers") {
