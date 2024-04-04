@@ -7,7 +7,9 @@
 .side_nav {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 93vh;
     width: 200px;
     padding: 15px;
     background-color: #2c2c2c;
