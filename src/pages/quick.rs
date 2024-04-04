@@ -51,7 +51,12 @@ impl HttpHeaders {
 }
 
 #[component]
-pub fn QuickRequest() -> impl IntoView {
+pub fn QuickRequest(
+    set_cdr: WriteSignal<bool>
+) -> impl IntoView {
+    let cdr = use_context::<ReadSignal<bool>>()
+        .expect("there to be a `count` signal provided");
+
     let http_params = create_rw_signal(vec![HttpHeaders::new()]);
     let http_form_encoded = create_rw_signal(vec![HttpHeaders::new()]);
     let http_headers = create_rw_signal(vec![HttpHeaders::new()]);
@@ -131,6 +136,7 @@ pub fn QuickRequest() -> impl IntoView {
 
             let res_struct: HttpResponse = from_str(&new_msg).unwrap();
             response.set(res_struct);
+            set_cdr.set(!cdr.get().clone());
         });
         set_loader.set(false);
     };
