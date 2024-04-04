@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use leptos::{leptos_dom::logging::console_log, *};
+use leptos::{leptos_dom::logging::{console_error, console_log}, *};
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
@@ -9,8 +9,8 @@ use wasm_bindgen::prelude::*;
 use url::Url;
 
 use crate::{components::{body::BodyComponent, header::Header, params::Params, response::Response}, utils::curl_parser};
-
 import_crate_style!(style, "src/pages/quick.module.scss");
+
 
 #[wasm_bindgen]
 extern "C" {
@@ -23,7 +23,8 @@ struct RequestArgs<'a> {
     url: &'a str,
     method: &'a str,
     body: &'a str,
-    // form_encoded: HashMap<String, String>,
+    bodyType: &'a str,
+    formEncoded: HashMap<String, String>,
     headers: HashMap<String, String>
 }
 
@@ -32,7 +33,14 @@ pub struct HttpResponse {
     pub headers: String,
     pub body: String,
     pub code: i32,
-    pub timing: f64
+    pub timing: f64,
+    pub err: String
+}
+
+impl HttpResponse {
+    fn new()->HttpResponse {
+        HttpResponse { headers: String::new(), body: String::new(), code: 0, timing: 0.00, err: String::new() }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -66,7 +74,7 @@ pub fn QuickRequest(
     let body = create_rw_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
-    let response = create_rw_signal(HttpResponse { headers: String::new(), body: String::new(), code: 0, timing: 0.00 });
+    let response = create_rw_signal(HttpResponse::new());
     
     let change_menu = move |val: String| {
         set_menu.set(val);
@@ -124,19 +132,25 @@ pub fn QuickRequest(
             }
 
             let args = to_value(&RequestArgs { 
-                // form_encoded: encoded_map, 
-                url: &name, 
-                method: method.get().as_str(), 
-                body: body.get().as_str(), 
-                headers: header_map 
+                formEncoded: encoded_map,
+                bodyType: body_type.get().as_str(),
+                url: &name,
+                method: method.get().as_str(),
+                body: body.get().as_str(),
+                headers: header_map
             }).unwrap();
+            console_log("unwrap Started call");
             // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-            let new_msg = invoke("request", args).await.as_string().expect("Request invoke failed");
-            // set_result.set(new_msg);
-
-            let res_struct: HttpResponse = from_str(&new_msg).unwrap();
-            response.set(res_struct);
-            set_cdr.set(!cdr.get().clone());
+            match invoke("request", args).await.as_string() {
+                Some(new_msg)=>{
+                    let res_struct: HttpResponse = from_str(&new_msg).unwrap();
+                    response.set(res_struct);
+                    set_cdr.set(!cdr.get().clone());
+                }
+                None =>{
+                    console_error("Invoke failed");
+                }
+            }            
         });
         set_loader.set(false);
     };
