@@ -1,14 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{collections::HashMap, str::FromStr, time::Instant};
-use diesel::{sql_types::Json, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use model::{History, NewHistory};
 use schema::histories;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tauri_plugin_http::reqwest::{self, header::{HeaderMap, HeaderName, HeaderValue}, Method};
 
-use crate::db::estabilish_connection;
+use crate::{db::estabilish_connection, schema::histories::created_at};
 mod db;
 mod model;
 mod schema;
@@ -33,23 +33,25 @@ async fn get_history() -> String {
     use self::schema::histories::dsl::histories;
     let connection = &mut estabilish_connection();
     
-    let list = histories.load::<History>(connection)
+    let list = histories
+        .order_by(created_at.desc())
+        .limit(15)
+        .load::<History>(connection)
         .expect("Error loading users");
 
     serde_json::to_string_pretty(&list).unwrap()
 }
 
 #[tauri::command]
-async fn get_history_by_id(id: i128) -> String {
+async fn get_history_by_id(id: i32) -> String {
     use self::schema::histories::dsl::histories;
     let connection = &mut estabilish_connection();
     
-    // let history = histories.find(id)
-    //     .first(connection)
-    //     .expect("Error loading users");
+    let history: History = histories.find(id)
+        .first(connection)
+        .expect("Error loading users");
 
-    // serde_json::to_string_pretty(&history).unwrap()
-    unimplemented!()
+    serde_json::to_string_pretty(&history).unwrap()
 }
 
 #[tauri::command]
@@ -59,6 +61,7 @@ async fn request(
     body: String,
     body_type: String,
     form_encoded: HashMap<String, String>,
+    form_data: String,
     headers: HashMap<String, String>,
 ) -> String {
     let client = reqwest::Client::new();
@@ -149,7 +152,12 @@ fn main() {
             db::init();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, request, get_history])
+        .invoke_handler(tauri::generate_handler![
+            greet, 
+            request, 
+            get_history,
+            get_history_by_id
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

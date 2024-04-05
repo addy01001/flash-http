@@ -24,6 +24,7 @@ struct RequestArgs<'a> {
     method: &'a str,
     body: &'a str,
     bodyType: &'a str,
+    formData: &'a str,
     formEncoded: HashMap<String, String>,
     headers: HashMap<String, String>
 }
@@ -58,6 +59,23 @@ impl HttpHeaders {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HttpFormData {
+    pub value: RwSignal<String>,
+    pub key: RwSignal<String>,
+    pub val_type: RwSignal<String>
+}
+
+impl HttpFormData {
+    pub fn new()->HttpFormData {
+        HttpFormData{ 
+            value: create_rw_signal(String::new()), 
+            key: create_rw_signal(String::new()),
+            val_type: create_rw_signal(String::new())
+        }
+    }
+}
+
 #[component]
 pub fn QuickRequest(
     set_cdr: WriteSignal<bool>
@@ -67,10 +85,11 @@ pub fn QuickRequest(
 
     let http_params = create_rw_signal(vec![HttpHeaders::new()]);
     let http_form_encoded = create_rw_signal(vec![HttpHeaders::new()]);
+    let http_form_data = create_rw_signal(vec![HttpFormData::new()]);
     let http_headers = create_rw_signal(vec![HttpHeaders::new()]);
     let url = create_rw_signal(String::new());
-    let body_type: RwSignal<String> = create_rw_signal(String::from("raw"));
-    let method: RwSignal<String> = create_rw_signal(String::from("POST"));
+    let body_type = create_rw_signal(String::from("raw"));
+    let method = create_rw_signal(String::from("POST"));
     let body = create_rw_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
@@ -133,6 +152,7 @@ pub fn QuickRequest(
 
             let args = to_value(&RequestArgs { 
                 formEncoded: encoded_map,
+                formData: "",
                 bodyType: body_type.get().as_str(),
                 url: &name,
                 method: method.get().as_str(),
@@ -167,7 +187,7 @@ pub fn QuickRequest(
         if menu.get().eq("Body") {
             view! {
                 <div>
-                    <BodyComponent body http_form_encoded menu=body_type/>
+                    <BodyComponent http_form_data body http_form_encoded menu=body_type/>
                 </div>
             }
         } else if menu.get().eq("Headers") {
