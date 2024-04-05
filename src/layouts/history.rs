@@ -1,4 +1,4 @@
-use leptos::{ component, create_resource, view, CollectView, IntoView, Transition};
+use leptos::{ component, create_resource, use_context, view, CollectView, IntoView, ReadSignal, SignalGet, Transition};
 use leptos_router::Outlet;
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
@@ -28,12 +28,15 @@ pub struct History {
 
 #[component]
 pub fn History() ->impl IntoView {
+    let cdr = use_context::<ReadSignal<bool>>()
+        .expect("there to be a `count` signal provided");
     pub async fn get_histories() -> Vec<History> {
         let args = to_value(&RequestArgs { }).unwrap();
         let new_msg = invoke("get_history", args).await.as_string().expect("Something went wrong");
         let res_struct: Vec<History> = from_str(&new_msg).unwrap();
         return res_struct;
     }
+
 
     let formated_url=move|s: String| {
         match s.get(0..20) {
@@ -47,7 +50,7 @@ pub fn History() ->impl IntoView {
         }
     };
 
-    let histories= create_resource(|| (), |_| async move { get_histories().await });
+    let histories= create_resource(move|| cdr.get(), |_| async move { get_histories().await });
     
     view! {
         <div class=style::main_container>

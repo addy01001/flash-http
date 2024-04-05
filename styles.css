@@ -33,6 +33,11 @@
   transition: 0.75s;
 }
 
+body {
+  height: 100%;
+  overflow-y: hidden;
+}
+
 .logo.tauri:hover {
   filter: drop-shadow(0 0 2em #24c8db);
 }

@@ -17,7 +17,7 @@ pub fn App() -> impl IntoView {
             <Routes>
                 <Route path="/" view=DefaultLayout>
                     <Route path="/" view=History>
-                        <Route path="/" view=|| view! { <QuickRequest/> }/>
+                        <Route path="/" view=move|| view! { <QuickRequest set_cdr/>  }/>
                     </Route>
                 </Route>
             </Routes>
