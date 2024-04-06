@@ -2,6 +2,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background-color: rgb(57, 57, 57);
+    padding: 10px;
 }
 
 .top_input {
@@ -22,4 +24,8 @@
     div {
         cursor: pointer;
     }
+}
+
+.request_div {
+    height: 50vh;
 }

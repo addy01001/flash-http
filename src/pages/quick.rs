@@ -180,7 +180,9 @@ pub fn QuickRequest(
                 <div on:click = move |_|{ change_menu(String::from("Headers")); }>Headers</div>
                 <div on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
             </div>
-            {move || dynamic_component()}
+            <div class=style::request_div>
+                {move || dynamic_component()}
+            </div>
             <div>  
                 <Show
                     when=move || { loader.get() == false }
