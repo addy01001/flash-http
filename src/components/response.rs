@@ -1,26 +1,8 @@
-use std::collections::HashMap;
-
 use leptos::*;
-use serde_json::Value;
 use stylance::import_crate_style;
 
-use crate::models::http_models::HttpResponse;
-
+use crate::{models::http_models::HttpResponse, utils::http::{format_json_body, json_string_to_hashmap}};
 import_crate_style!(style, "src/components/response.module.scss");
-
-fn json_string_to_hashmap(json_str: &str) ->HashMap<String, String> {
-    let json_value: Value = serde_json::from_str(json_str).unwrap();
-    
-    let mut hashmap: HashMap<String, String> = HashMap::new();
-
-    if let Value::Object(obj) = json_value {
-        for (key, value) in obj {
-            hashmap.insert(key, value.to_string());
-        }
-    }
-
-    hashmap
-}
 
 #[component]
 pub fn Response(
@@ -29,15 +11,8 @@ pub fn Response(
 
     let (menu, set_menu) = create_signal(String::from("Body"));
     let get_result_body = move || {
-        let formated_str = response.get().body
-            .replace("\\n", "\r\n")
-            .replace("\\\"", "\"");
-        let trimmed = if formated_str.starts_with('"') && formated_str.ends_with('"') {
-            formated_str.trim_matches('"').to_string()
-        } else {
-            formated_str
-        };
-        return trimmed;
+        let formated_str = format_json_body(response.get().body);
+        return formated_str;
     };
 
     let get_result_header = move || {
@@ -87,7 +62,6 @@ pub fn Response(
                                 }
                             })
                             .collect_view()}
-                        // {move|| dynamic_component()}
                     </table>
                 </div>
             }
@@ -100,10 +74,10 @@ pub fn Response(
 
     view! {
         <div class=style::response_container>
-            <h5>Response</h5>
-            <div>Code: {move || get_code()}</div>
-            <div>Time: {move || get_timing()}</div>
-            
+            <div>
+                <div>Code: {move || get_code()}</div>
+                <div>Time: {move || get_timing()}</div>
+            </div>
             <div class=style::response_nav>
                 <div on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>
                 <div on:click = move|_|{ change_menu(String::from("Body")); }>Body</div>

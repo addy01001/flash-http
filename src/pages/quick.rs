@@ -8,7 +8,7 @@ use serde_json::from_str;
 use wasm_bindgen::prelude::*;
 use url::Url;
 
-use crate::{components::{body::BodyComponent, header::Header, params::Params, response::Response}, models::http_models::{HttpFormData, HttpHashMapData, HttpResponse}, utils::curl_parser};
+use crate::{components::{body::BodyComponent, header::Header, params::Params, response::Response}, models::http_models::{HttpFormData, HttpHashMapData, HttpResponse}, utils::http::curl_parser};
 import_crate_style!(style, "src/pages/quick.module.scss");
 
 
@@ -36,6 +36,7 @@ pub fn QuickRequest(
     let cdr = use_context::<ReadSignal<bool>>()
         .expect("there to be a `count` signal provided");
 
+    let http_binary = create_rw_signal(String::new());
     let http_params = create_rw_signal(vec![HttpHashMapData::new()]);
     let http_form_encoded = create_rw_signal(vec![HttpHashMapData::new()]);
     let http_form_data = create_rw_signal(vec![HttpFormData::new()]);
@@ -112,7 +113,7 @@ pub fn QuickRequest(
                 body: body.get().as_str(),
                 headers: header_map
             }).unwrap();
-            console_log("unwrap Started call");
+
             // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
             match invoke("request", args).await.as_string() {
                 Some(new_msg)=>{
@@ -123,9 +124,9 @@ pub fn QuickRequest(
                 None =>{
                     console_error("Invoke failed");
                 }
-            }            
+            }
+            set_loader.set(false);
         });
-        set_loader.set(false);
     };
 
     let message = move || {
@@ -140,7 +141,7 @@ pub fn QuickRequest(
         if menu.get().eq("Body") {
             view! {
                 <div>
-                    <BodyComponent http_form_data body http_form_encoded menu=body_type/>
+                    <BodyComponent binary=http_binary http_form_data body http_form_encoded menu=body_type/>
                 </div>
             }
         } else if menu.get().eq("Headers") {
@@ -182,10 +183,15 @@ pub fn QuickRequest(
             {move || dynamic_component()}
             <div>  
                 <Show
-                    when=move || { response.get().code != 0 }
-                    fallback=|| view! { <div></div> }
+                    when=move || { loader.get() == false }
+                    fallback=|| view! { <div>Loading...</div> }
                 >
-                    <Response response/>
+                    <Show
+                        when=move || { response.get().code != 0 }
+                        fallback=|| view! { <div></div> }
+                    >
+                        <Response response/>
+                    </Show>
                 </Show>
             </div>
         </div>
