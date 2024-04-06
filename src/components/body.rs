@@ -1,7 +1,7 @@
 use leptos::*;
 use stylance::import_crate_style;
 
-use crate::{components::{header::Header, form_data::FormData}, pages::quick::{HttpFormData, HttpHeaders}};
+use crate::{components::{form_data::FormData, header::Header}, models::http_models::{HttpFormData, HttpHashMapData}};
 import_crate_style!(style, "src/components/body.module.scss");
 
 #[component]
@@ -9,7 +9,7 @@ pub fn BodyComponent(
     http_form_data: RwSignal<Vec<HttpFormData>>,
     body: RwSignal<String>,
     menu: RwSignal<String>,
-    http_form_encoded: RwSignal<Vec<HttpHeaders>>
+    http_form_encoded: RwSignal<Vec<HttpHashMapData>>
 )->impl IntoView {
 
     let update_body = move |ev: ev::Event| {

@@ -54,7 +54,7 @@ async fn get_history_by_id(id: i32) -> String {
     serde_json::to_string_pretty(&history).unwrap()
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 async fn request(
     method: String,
     url: String,
@@ -95,7 +95,12 @@ async fn request(
     match finalized_request.send().await {
         Ok(response) => {
         let timing = now.elapsed();
-        let history = NewHistory {url: url.clone(), method: method.clone(), body: body.clone(), headers: serde_json::to_string(&headers).unwrap() };
+        let history = NewHistory {
+            url: url.clone(), 
+            method: method.clone(), 
+            body: body.clone(), 
+            headers: serde_json::to_string(&headers).unwrap() 
+        };
         let connection = &mut estabilish_connection();
 
         diesel::insert_into(histories::table)
@@ -116,7 +121,6 @@ async fn request(
         } else {
             body = response.text().await.expect("Parse error");
         }
-        
 
         let response_struct = HttpResponse {
             headers: &headers.as_str(),

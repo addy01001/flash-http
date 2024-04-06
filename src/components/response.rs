@@ -4,7 +4,8 @@ use leptos::*;
 use serde_json::Value;
 use stylance::import_crate_style;
 
-use crate::pages::quick::HttpResponse;
+use crate::models::http_models::HttpResponse;
+
 import_crate_style!(style, "src/components/response.module.scss");
 
 fn json_string_to_hashmap(json_str: &str) ->HashMap<String, String> {
@@ -64,10 +65,6 @@ pub fn Response(
     let change_menu = move |val: String| {
         set_menu.set(val);
     };
-
-    // let to_render = move|| {
-    //     return response.get().code!=0;  
-    // };
 
     let dynamic_component = move|| {
         if menu.get().eq("Headers") {
