@@ -2,11 +2,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{collections::HashMap, str::FromStr, time::Instant};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use hyper::{body, Request, Uri};
+
+use hyper_util::rt::TokioIo;
 use model::{History, NewHistory};
 use schema::histories;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tauri_plugin_http::reqwest::{self, header::{HeaderMap, HeaderName, HeaderValue}, Method};
+use tokio::net::TcpStream;
 
 use crate::{db::estabilish_connection, schema::histories::created_at};
 mod db;
@@ -52,6 +56,44 @@ async fn get_history_by_id(id: i32) -> String {
         .expect("Error loading users");
 
     serde_json::to_string_pretty(&history).unwrap()
+}
+
+async fn send_request(
+    method: String,
+    uri: String,
+    body: String
+)  {
+    let url = uri.parse::<hyper::Uri>().unwrap();
+    let host = url.host().expect("uri has no host");
+    let port = url.port_u16().unwrap_or(80);
+
+    let address = format!("{}:{}", host, port);
+
+    // Open a TCP connection to the remote host
+    let stream = TcpStream::connect(address).await.unwrap();
+    let io = TokioIo::new(stream);
+    // Create the Hyper client
+    let (mut sender, conn) = hyper::client::conn::http1::handshake::<_, String>(io).await.unwrap();
+
+    // Spawn a task to poll the connection, driving the HTTP state
+    tokio::task::spawn(async move {
+        if let Err(err) = conn.await {
+            println!("Connection failed: {:?}", err);
+            return Err(String::new());
+        }
+        let authority = url.authority().unwrap().clone();
+
+        // Create an HTTP request with an empty body and a HOST header
+        let req = Request::builder()
+            .method(hyper::Method::from_str(&method).unwrap())
+            .uri(url)
+            .header(hyper::header::HOST, authority.as_str())
+            .body(body).unwrap();
+
+        // Await the response...
+        let mut res = sender.send_request(req).await.unwrap();
+        return Ok(res);
+    });
 }
 
 #[tauri::command]
