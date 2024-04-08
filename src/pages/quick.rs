@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use leptos::*;
+use leptos::{leptos_dom::logging::{console_error, console_log}, *};
 use serde_wasm_bindgen::to_value;
 use stylance::import_crate_style;
 use serde::{Deserialize, Serialize};
@@ -8,9 +8,9 @@ use serde_json::from_str;
 use wasm_bindgen::prelude::*;
 use url::Url;
 
-use crate::{components::{header::Header, params::Params, response::Response}, utils::curl_parser};
-
+use crate::{components::{body::BodyComponent, header::Header, params::Params, response::Response}, models::http_models::{HttpFormData, HttpHashMapData, HttpResponse}, utils::http::curl_parser};
 import_crate_style!(style, "src/pages/quick.module.scss");
+
 
 #[wasm_bindgen]
 extern "C" {
@@ -23,42 +23,31 @@ struct RequestArgs<'a> {
     url: &'a str,
     method: &'a str,
     body: &'a str,
+    body_type: &'a str,
+    form_data: &'a str,
+    form_encoded: HashMap<String, String>,
     headers: HashMap<String, String>
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HttpResponse {
-    pub headers: String,
-    pub body: String,
-    pub code: i32,
-    pub timing: f64
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HttpHeaders {
-    pub value: RwSignal<String>,
-    pub key: RwSignal<String>,
-}
-
-impl HttpHeaders {
-    pub fn new()->HttpHeaders {
-        HttpHeaders{ 
-            value: create_rw_signal(String::new()), 
-            key: create_rw_signal(String::new()) 
-        }
-    }
-}
-
 #[component]
-pub fn QuickRequest() -> impl IntoView {
-    let http_params = create_rw_signal(vec![HttpHeaders::new()]);
-    let http_headers = create_rw_signal(vec![HttpHeaders::new()]);
+pub fn QuickRequest(
+    set_cdr: WriteSignal<bool>
+) -> impl IntoView {
+    let cdr = use_context::<ReadSignal<bool>>()
+        .expect("there to be a `count` signal provided");
+
+    let http_binary = create_rw_signal(String::new());
+    let http_params = create_rw_signal(vec![HttpHashMapData::new()]);
+    let http_form_encoded = create_rw_signal(vec![HttpHashMapData::new()]);
+    let http_form_data = create_rw_signal(vec![HttpFormData::new()]);
+    let http_headers = create_rw_signal(vec![HttpHashMapData::new()]);
     let url = create_rw_signal(String::new());
+    let body_type = create_rw_signal(String::from("raw"));
     let method = create_rw_signal(String::from("POST"));
     let body = create_rw_signal(String::new());
     let (menu, set_menu) = create_signal(String::from("Body"));
     let (loader, set_loader) = create_signal(false);
-    let response = create_rw_signal(HttpResponse { headers: String::new(), body: String::new(), code: 0, timing: 0.00 });
+    let response = create_rw_signal(HttpResponse::new());
     
     let change_menu = move |val: String| {
         set_menu.set(val);
@@ -76,11 +65,11 @@ pub fn QuickRequest() -> impl IntoView {
         url.set(v);
         let parsed_url = Url::parse(url.get().as_str()).expect("Failed to parse URL");
 
-        let mut temp: Vec<HttpHeaders> = vec![];
+        let mut temp: Vec<HttpHashMapData> = vec![];
         parsed_url.query_pairs()
             .for_each(|(key, value)| {
                 if !key.to_string().is_empty() {
-                    temp.push(HttpHeaders{ value: create_rw_signal(value.to_string()), key: create_rw_signal(key.to_string()) })
+                    temp.push(HttpHashMapData{ value: create_rw_signal(value.to_string()), key: create_rw_signal(key.to_string()) })
                 }
             });
         http_params.set(temp);
@@ -91,35 +80,53 @@ pub fn QuickRequest() -> impl IntoView {
         method.set(v);
     };
 
-    let update_body = move |ev: ev::Event| {
-        let v = event_target_value(&ev);
-        body.set(v);
-    };
-
     let handle_submit = move |_| {
         set_loader.set(true);
         let mut header_map: HashMap<String, String> = HashMap::new();
+        let mut encoded_map: HashMap<String, String> = HashMap::new();
         http_headers.get().into_iter()
             .for_each(|v|{
                 if !v.key.get().is_empty() {
                     header_map.insert(v.key.get(), v.value.get());
                 }
             });
+
+        http_form_encoded.get().into_iter()
+            .for_each(|v|{
+                if !v.key.get().is_empty() {
+                    encoded_map.insert(v.key.get(), v.value.get());
+                }
+            });
+            console_log("Started call");
         spawn_local(async move {
             let name = url.get_untracked();
             if name.is_empty() {
                 return;
             }
 
-            let args = to_value(&RequestArgs { url: &name, method: method.get().as_str(), body: body.get().as_str(), headers: header_map }).unwrap();
-            // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-            let new_msg = invoke("request", args).await.as_string().expect("Something went wrong");
-            // set_result.set(new_msg);
+            let args = to_value(&RequestArgs { 
+                form_encoded: encoded_map,
+                form_data: "",
+                body_type: body_type.get().as_str(),
+                url: &name,
+                method: method.get().as_str(),
+                body: body.get().as_str(),
+                headers: header_map
+            }).unwrap();
 
-            let res_struct: HttpResponse = from_str(&new_msg).unwrap();
-            response.set(res_struct);
+            // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+            match invoke("request", args).await.as_string() {
+                Some(new_msg)=>{
+                    let res_struct: HttpResponse = from_str(&new_msg).unwrap();
+                    response.set(res_struct);
+                    set_cdr.set(!cdr.get().clone());
+                }
+                None =>{
+                    console_error("Invoke failed");
+                }
+            }
+            set_loader.set(false);
         });
-        set_loader.set(false);
     };
 
     let message = move || {
@@ -134,7 +141,7 @@ pub fn QuickRequest() -> impl IntoView {
         if menu.get().eq("Body") {
             view! {
                 <div>
-                    <textarea class=style::textarea on:input=update_body prop:value=body />
+                    <BodyComponent binary=http_binary http_form_data body http_form_encoded menu=body_type/>
                 </div>
             }
         } else if menu.get().eq("Headers") {
@@ -155,6 +162,25 @@ pub fn QuickRequest() -> impl IntoView {
         }
     };
 
+    let get_active_style=move |current: &str|{
+        if menu.get().eq(current) {
+            style::active
+        } else {
+            ""
+        }
+    };
+
+    let error_component = move|| {
+        view! {
+             <Show
+                when=move || { response.get().err.eq("") }
+                fallback=|| view! { <div>Oops...Something doesn 't seem right</div> }
+            >
+                <div/>
+            </Show>
+        }
+    };
+
     view! {
         <div class=style::quick_container>
             <div class=style::top_input>
@@ -169,17 +195,24 @@ pub fn QuickRequest() -> impl IntoView {
                 <button on:click=handle_submit>{move || message()}</button>
             </div>
             <div class=style::field_nav>
-                <div on:click = move |_|{ change_menu(String::from("Params")); }>Params</div>
-                <div on:click = move |_|{ change_menu(String::from("Headers")); }>Headers</div>
-                <div on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
+                <div class=move || { get_active_style("Params") }  on:click= move |_|{ change_menu(String::from("Params")); }>Params</div>
+                <div class=move || { get_active_style("Headers") } on:click = move |_|{ change_menu(String::from("Headers")); }>Headers</div>
+                <div class=move || { get_active_style("Body") } on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
             </div>
-            {move || dynamic_component()}
+            <div class=style::request_div>
+                {move || dynamic_component()}
+            </div>
             <div>  
                 <Show
-                    when=move || { response.get().code != 0 }
-                    fallback=|| view! { <div></div> }
+                    when=move || { loader.get() == false }
+                    fallback=|| view! { <div>Loading...</div>  }
                 >
-                    <Response response/>
+                    <Show
+                        when=move || { response.get().code != 0 }
+                        fallback=move || { error_component() }
+                    >
+                        <Response response/>
+                    </Show>
                 </Show>
             </div>
         </div>

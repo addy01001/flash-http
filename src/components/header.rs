@@ -1,17 +1,18 @@
 use stylance::import_crate_style;
 use leptos::*;
 
-use crate::pages::quick::HttpHeaders;
+use crate::models::http_models::HttpHashMapData;
+
 import_crate_style!(style, "src/components/header.module.scss");
 
 
 #[component]
 pub fn Header(
-    http_headers: RwSignal<Vec<HttpHeaders>>
+    http_headers: RwSignal<Vec<HttpHashMapData>>
 )->impl IntoView {
     let add_column = move|| {
         let mut new_value = http_headers.get().clone();
-        new_value.push(HttpHeaders::new());
+        new_value.push(HttpHashMapData::new());
         http_headers.set(new_value);
     };
 
@@ -24,7 +25,7 @@ pub fn Header(
     let handle_delete = move|index: usize|{
         let mut new_value = http_headers.get().clone();
         if new_value.len() == 1 {
-            http_headers.set(vec![HttpHeaders::new()])
+            http_headers.set(vec![HttpHashMapData::new()])
         } else {
             new_value.remove(index-1);
             http_headers.set(new_value);

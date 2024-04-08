@@ -1,0 +1,13 @@
+.textarea {
+    width: 99%;
+    height: 40lvh;
+    background-color: rgb(233, 233, 233);
+    resize: none;
+    color: rgb(0, 0, 0);
+    border: 1px thin black;
+}
+
+.form {
+    display: flex;
+    gap: 5px;
+}
