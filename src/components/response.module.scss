@@ -20,7 +20,7 @@
 }
 
 .response_section {
-    height: 20vh;
+    height: 35lvh;
     width: 100%;
     overflow-y: auto;
 }
@@ -42,5 +42,10 @@
   padding-top: 12px;
   padding-bottom: 12px;
   text-align: left;
-  color: white;
+  color: rgb(0, 0, 0);
+}
+
+.metrics {
+  display: flex;
+  gap: 20px;
 }

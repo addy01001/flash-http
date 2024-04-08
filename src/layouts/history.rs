@@ -39,7 +39,7 @@ pub fn History() ->impl IntoView {
 
 
     let formated_url=move|s: String| {
-        match s.get(0..20) {
+        match s.get(0..25) {
             Some(first_20_chars) => {
                 let ret_str= first_20_chars.to_string() + "...";
                 return ret_str;

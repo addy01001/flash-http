@@ -74,9 +74,9 @@ pub fn Response(
 
     view! {
         <div class=style::response_container>
-            <div>
+            <div class=style::metrics>
                 <div>Code: {move || get_code()}</div>
-                <div>Time: {move || get_timing()}</div>
+                <div>Time: {move || get_timing()}s</div>
             </div>
             <div class=style::response_nav>
                 <div on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>

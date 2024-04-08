@@ -1,6 +1,6 @@
 .main_container {
     width: 100%;
-    height: 98vh;
+    height: 100lvh;
     display: flex;
 }
 
@@ -10,7 +10,7 @@
     gap: 5px;
     width: 10vw;
     padding: 15px;
-    background-color: #2c2c2c;
+    background-color: #f0f0f0;
 }
 
 .history_item {
@@ -19,12 +19,13 @@
     cursor: pointer;
     font-size: 12px;
     padding: 5px 20px;
+    text-overflow: clip;
     &:hover {
-        background-color: #4a4a4a;
+        background-color: #dfdfdf;
     }
 }
 
 .child_div {
     padding: 20px;
-    width: 82vw;
+    flex-grow: 1;
 }

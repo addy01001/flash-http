@@ -21,7 +21,7 @@ async fn get_history() -> String {
     
     let list = histories
         .order_by(created_at.desc())
-        .limit(15)
+        .limit(50)
         .load::<History>(connection)
         .expect("Error loading users");
 
