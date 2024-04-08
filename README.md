@@ -22,7 +22,7 @@ That's it! You should now have Flash HTTP up and running on your local machine.
 
 ## Usage 💡
 
-1. **Creating Requests**: Click on the "+" button to create a new request. Enter the request details such as method, URL, headers, and body.
+1. **Creating Requests**: Enter the request details such as method, URL, headers, and body.
 2. **Sending Requests**: Once your request is set up, click on the "Send" button to execute it.
 3. **Inspecting Responses**: The response details will be displayed below the request, including status code, headers, and body.
 
