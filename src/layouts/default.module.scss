@@ -9,9 +9,18 @@
 
 }
 
+.titlebar {
+    display: flex;
+    gap: 20px;
+    margin-left: auto;
+}
+
 .app_bar {
+    padding: 0 20px;
     height: 40px;
     background-color: #d9d9d9;
+    display: flex;
+    align-items: center;
 }
 
 .side_nav {

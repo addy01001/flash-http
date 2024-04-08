@@ -12,6 +12,19 @@
     padding: 2px;
     border-style: groove;
     border-radius: 5px;
+    select {
+        width: 100px;
+        font-size: 15px;
+        font-weight: bold;
+        &:focus {
+            outline: 0;
+        }
+        option {
+            border: 0;
+            font-weight: bold;
+        }
+    }
+
     input {
         width: 70%;
     }
