@@ -36,6 +36,13 @@ pub fn Response(
         };
     };
 
+    let get_active_style=move |current: &str|{
+        if menu.get().eq(current) {
+            style::active
+        } else {
+            ""
+        }
+    };
 
     let change_menu = move |val: String| {
         set_menu.set(val);
@@ -79,8 +86,8 @@ pub fn Response(
                 <div>Time: {move || get_timing()}s</div>
             </div>
             <div class=style::response_nav>
-                <div on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>
-                <div on:click = move|_|{ change_menu(String::from("Body")); }>Body</div>
+                <div class=move || { get_active_style("Headers") } on:click = move|_|{ change_menu(String::from("Headers")); }>Header</div>
+                <div class=move || { get_active_style("Body") } on:click = move|_|{ change_menu(String::from("Body")); }>Body</div>
             </div>
             <div class=style::response_section>
                 {move|| dynamic_component()}
