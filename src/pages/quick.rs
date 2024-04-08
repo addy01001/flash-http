@@ -162,6 +162,25 @@ pub fn QuickRequest(
         }
     };
 
+    let get_active_style=move |current: &str|{
+        if menu.get().eq(current) {
+            style::active
+        } else {
+            ""
+        }
+    };
+
+    let error_component = move|| {
+        view! {
+             <Show
+                when=move || { response.get().err.eq("") }
+                fallback=|| view! { <div>Oops...Something doesn 't seem right</div> }
+            >
+                <div/>
+            </Show>
+        }
+    };
+
     view! {
         <div class=style::quick_container>
             <div class=style::top_input>
@@ -176,9 +195,9 @@ pub fn QuickRequest(
                 <button on:click=handle_submit>{move || message()}</button>
             </div>
             <div class=style::field_nav>
-                <div on:click = move |_|{ change_menu(String::from("Params")); }>Params</div>
-                <div on:click = move |_|{ change_menu(String::from("Headers")); }>Headers</div>
-                <div on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
+                <div class=move || { get_active_style("Params") }  on:click= move |_|{ change_menu(String::from("Params")); }>Params</div>
+                <div class=move || { get_active_style("Headers") } on:click = move |_|{ change_menu(String::from("Headers")); }>Headers</div>
+                <div class=move || { get_active_style("Body") } on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
             </div>
             <div class=style::request_div>
                 {move || dynamic_component()}
@@ -186,11 +205,11 @@ pub fn QuickRequest(
             <div>  
                 <Show
                     when=move || { loader.get() == false }
-                    fallback=|| view! { <div>Loading...</div> }
+                    fallback=|| view! { <div>Loading...</div>  }
                 >
                     <Show
                         when=move || { response.get().code != 0 }
-                        fallback=|| view! { <div></div> }
+                        fallback=move || { error_component() }
                     >
                         <Response response/>
                     </Show>

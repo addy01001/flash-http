@@ -28,6 +28,10 @@
     div {
         cursor: pointer;
     }
+
+    .active {
+        border-bottom: 0.5px solid rgb(223, 101, 26);
+    }
 }
 
 .request_div {

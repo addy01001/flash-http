@@ -33,15 +33,15 @@ pub fn BodyComponent(
             <div>
             //Implement body types nav
                 <form class=style::form>
-                    <input type="radio" id="none" name="body_type" value="none" on:input=handle_change/>
+                    <input checked=move|| { menu.get().eq("none") } type="radio" id="none" name="body_type" value="none" on:input=handle_change/>
                     <label for="none">none</label><br/>
-                    <input type="radio" id="form_data" name="body_type" value="form-data" on:input=handle_change/>
+                    <input checked=move|| { menu.get().eq("form-data") } type="radio" id="form_data" name="body_type" value="form-data" on:input=handle_change/>
                     <label for="form_data">form-data</label><br/>
-                    <input type="radio" id="url_encoded" name="body_type" value="form-url-encoded" on:input=handle_change/>
+                    <input checked=move|| { menu.get().eq("form-url-encoded") } type="radio" id="url_encoded" name="body_type" value="form-url-encoded" on:input=handle_change/>
                     <label for="url_encoded">form-url-encoded</label><br/>
-                    <input type="radio" id="binary" name="body_type" value="binary" on:input=handle_change/>
+                    <input checked=move|| { menu.get().eq("binary") } type="radio" id="binary" name="body_type" value="binary" on:input=handle_change/>
                     <label for="binary">binary</label><br/>
-                    <input type="radio" id="raw" name="body_type" value="raw" on:input=handle_change />
+                    <input checked=move|| { menu.get().eq("raw") } type="radio" id="raw" name="body_type" value="raw" on:input=handle_change />
                     <label for="raw">raw</label>
                 </form>
             </div>
