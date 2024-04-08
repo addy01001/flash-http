@@ -1,15 +1,16 @@
 use leptos::*;
 use stylance::import_crate_style;
-
-use crate::{components::{header::Header, form_data::FormData}, pages::quick::{HttpFormData, HttpHeaders}};
+use crate::{components::{form_data::FormData, header::Header}, models::http_models::{HttpFormData, HttpHashMapData}};
 import_crate_style!(style, "src/components/body.module.scss");
+
 
 #[component]
 pub fn BodyComponent(
     http_form_data: RwSignal<Vec<HttpFormData>>,
     body: RwSignal<String>,
     menu: RwSignal<String>,
-    http_form_encoded: RwSignal<Vec<HttpHeaders>>
+    binary: RwSignal<String>,
+    http_form_encoded: RwSignal<Vec<HttpHashMapData>>
 )->impl IntoView {
 
     let update_body = move |ev: ev::Event| {
@@ -20,6 +21,11 @@ pub fn BodyComponent(
     let handle_change = move|ev| {
         let v: String = event_target_value(&ev);
         menu.set(v);
+    };
+
+    let handle_upload = move|ev| {
+        let v: String = event_target_value(&ev);
+        binary.set(v);
     };
 
     view! {
@@ -41,43 +47,50 @@ pub fn BodyComponent(
             </div>
 
             <div>
-                // TODO: Change to switch case
-                {move || if menu.get().eq("raw") {
-                    return view! {
-                        <div>
-                            <textarea class=style::textarea on:input=update_body prop:value=body />
-                        </div>
-                    };
-                 } else if menu.get().eq("none") {
-                    return view! {
-                        <div>
-                            This request has no body
-                        </div>
-                    };
-                 } else if menu.get().eq("form-url-encoded") {
-                    return view! {
-                        <div>
-                            <Header http_headers=http_form_encoded/>
-                        </div>
-                    };
-                 } else if menu.get().eq("binary") {
-                    return view! {
-                        <div>
-                            <input type="file" id="myFile" name="filename"/>
-                            Build in progress
-                        </div>
-                    };
-                 } else if menu.get().eq("form-data") {
-                    return view! {<div>
-                        Build in progress
-                        <FormData http_params= http_form_data/>
-                        </div>}
-                 } else {
-                        return view! {
-                            <div>Build in progress</div>
-                        };
+                {move || match menu.get().as_str() {
+                    "raw"=>{
+                        view! {
+                            <div>
+                                <textarea class=style::textarea on:input=update_body prop:value=body />
+                            </div>
+                        }
                     }
-                }
+                    "none"=>{
+                        view! {
+                            <div>
+                                This request has no body
+                            </div>
+                        }
+                    }
+                    "form-url-encoded"=>{
+                        view! {
+                            <div>
+                                <Header http_headers=http_form_encoded/>
+                            </div>
+                        }
+                    }
+                    "binary"=>{
+                        view! {
+                            <div>
+                                <input on:input=handle_upload type="file" id="myFile" name="filename"/>
+                                Build in progress
+                            </div>
+                        }
+                    }
+                    "form-data"=>{
+                        view! {
+                            <div>
+                                Build in progress
+                                <FormData http_params= http_form_data/>
+                                </div>
+                            }
+                    }
+                    _=>{
+                        view! {
+                            <div>Build in progress</div>
+                        }
+                    }
+                }}
             </div>
         </div>
     }

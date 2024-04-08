@@ -13,13 +13,14 @@
 
 .body_container {
     white-space: pre-line;
+    overflow: scroll;
     pre {
         white-space: pre-wrap;
     }
 }
 
 .response_section {
-    height: 20vh;
+    height: 35lvh;
     width: 100%;
     overflow-y: auto;
 }
@@ -37,19 +38,14 @@
   height: 20px;
 }
 
-.desc_div {
-  background-color: black;
-  width: 100%;
-  display: flex;
-  button {
-    margin-left: auto;
-  }
-}
-
 .headers th {
   padding-top: 12px;
   padding-bottom: 12px;
   text-align: left;
-  // background-color: #04AA6D;
-  color: white;
+  color: rgb(0, 0, 0);
+}
+
+.metrics {
+  display: flex;
+  gap: 20px;
 }

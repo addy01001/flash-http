@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use stylance::import_crate_style;
 use leptos::*;
 
-use crate::pages::quick::HttpFormData;
+use crate::models::http_models::HttpFormData;
+
 import_crate_style!(style, "src/components/form_data.module.scss");
 
 #[component]

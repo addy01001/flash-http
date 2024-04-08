@@ -3,30 +3,16 @@
 use std::{collections::HashMap, str::FromStr, time::Instant};
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use model::{History, NewHistory};
+use models::http_response::HttpResponse;
 use schema::histories;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tauri_plugin_http::reqwest::{self, header::{HeaderMap, HeaderName, HeaderValue}, Method};
 
 use crate::{db::estabilish_connection, schema::histories::created_at};
 mod db;
 mod model;
+mod models;
 mod schema;
-
-#[derive(Serialize, Deserialize)]
-struct HttpResponse<'a> {
-    headers: &'a str,
-    body: &'a str,
-    code: u16,
-    timing: f64,
-    err: String,
-}
-
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[tauri::command]
 async fn get_history() -> String {
@@ -35,7 +21,7 @@ async fn get_history() -> String {
     
     let list = histories
         .order_by(created_at.desc())
-        .limit(15)
+        .limit(50)
         .load::<History>(connection)
         .expect("Error loading users");
 
@@ -54,7 +40,7 @@ async fn get_history_by_id(id: i32) -> String {
     serde_json::to_string_pretty(&history).unwrap()
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 async fn request(
     method: String,
     url: String,
@@ -95,7 +81,12 @@ async fn request(
     match finalized_request.send().await {
         Ok(response) => {
         let timing = now.elapsed();
-        let history = NewHistory {url: url.clone(), method: method.clone(), body: body.clone(), headers: serde_json::to_string(&headers).unwrap() };
+        let history = NewHistory {
+            url: url.clone(), 
+            method: method.clone(), 
+            body: body.clone(), 
+            headers: serde_json::to_string(&headers).unwrap() 
+        };
         let connection = &mut estabilish_connection();
 
         diesel::insert_into(histories::table)
@@ -111,16 +102,15 @@ async fn request(
 
         let body: String;
         if content_type.contains("json") {
-            let body_json = json!(response.text().await.expect("Parse error"));
-            body = serde_json::to_string_pretty(&body_json).unwrap();
+            let body_json = json!(response.text().await.unwrap_or(String::from("{}")));
+            body = serde_json::to_string_pretty(&body_json).unwrap_or(String::from("{}"));
         } else {
             body = response.text().await.expect("Parse error");
         }
-        
 
         let response_struct = HttpResponse {
-            headers: &headers.as_str(),
-            body: &body,
+            headers,
+            body,
             code: status.as_u16(),
             timing: timing.as_secs_f64(),
             err: String::new()
@@ -130,14 +120,7 @@ async fn request(
         Err(err) => {
             println!("{:?}", err);
             let timing = now.elapsed();
-            let response_struct = HttpResponse {
-                headers: "",
-                body: "",
-                code: 0,
-                timing: timing.as_secs_f64(),
-                err: format!("{:?}", err)
-            };
-            serde_json::to_string_pretty(&response_struct).unwrap()
+            serde_json::to_string_pretty(&HttpResponse::with_error(err, timing.as_secs_f64())).unwrap()
         }
     }
 }
@@ -153,7 +136,6 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet, 
             request, 
             get_history,
             get_history_by_id

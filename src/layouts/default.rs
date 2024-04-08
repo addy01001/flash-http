@@ -6,14 +6,19 @@ import_crate_style!(style, "src/layouts/default.module.scss");
 #[component]
 pub fn DefaultLayout() -> impl IntoView {
     view! {
-        <div class=style::main_container>
-            <div class=style::side_nav>
-                // <div>Quick</div>
-                <div>History</div>
-                // <div>Collections</div>
+        <div class=style::app>
+            <div class=style::app_bar>
+              <div>Flash HTTP</div>
             </div>
-            <div class=style::child_div>
-                <Outlet/>    
+            <div class=style::main_container>
+                <div class=style::side_nav>
+                    // <div>Quick</div>
+                    <div>History</div>
+                    // <div>Collections</div>
+                </div>
+                <div class=style::child_div>
+                    <Outlet/>    
+                </div>
             </div>
         </div>
     }

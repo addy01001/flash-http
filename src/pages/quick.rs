@@ -8,7 +8,7 @@ use serde_json::from_str;
 use wasm_bindgen::prelude::*;
 use url::Url;
 
-use crate::{components::{body::BodyComponent, header::Header, params::Params, response::Response}, utils::curl_parser};
+use crate::{components::{body::BodyComponent, header::Header, params::Params, response::Response}, models::http_models::{HttpFormData, HttpHashMapData, HttpResponse}, utils::http::curl_parser};
 import_crate_style!(style, "src/pages/quick.module.scss");
 
 
@@ -23,57 +23,10 @@ struct RequestArgs<'a> {
     url: &'a str,
     method: &'a str,
     body: &'a str,
-    bodyType: &'a str,
-    formData: &'a str,
-    formEncoded: HashMap<String, String>,
+    body_type: &'a str,
+    form_data: &'a str,
+    form_encoded: HashMap<String, String>,
     headers: HashMap<String, String>
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HttpResponse {
-    pub headers: String,
-    pub body: String,
-    pub code: i32,
-    pub timing: f64,
-    pub err: String
-}
-
-impl HttpResponse {
-    fn new()->HttpResponse {
-        HttpResponse { headers: String::new(), body: String::new(), code: 0, timing: 0.00, err: String::new() }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HttpHeaders {
-    pub value: RwSignal<String>,
-    pub key: RwSignal<String>,
-}
-
-impl HttpHeaders {
-    pub fn new()->HttpHeaders {
-        HttpHeaders{ 
-            value: create_rw_signal(String::new()), 
-            key: create_rw_signal(String::new())
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HttpFormData {
-    pub value: RwSignal<String>,
-    pub key: RwSignal<String>,
-    pub val_type: RwSignal<String>
-}
-
-impl HttpFormData {
-    pub fn new()->HttpFormData {
-        HttpFormData{ 
-            value: create_rw_signal(String::new()), 
-            key: create_rw_signal(String::new()),
-            val_type: create_rw_signal(String::new())
-        }
-    }
 }
 
 #[component]
@@ -83,10 +36,11 @@ pub fn QuickRequest(
     let cdr = use_context::<ReadSignal<bool>>()
         .expect("there to be a `count` signal provided");
 
-    let http_params = create_rw_signal(vec![HttpHeaders::new()]);
-    let http_form_encoded = create_rw_signal(vec![HttpHeaders::new()]);
+    let http_binary = create_rw_signal(String::new());
+    let http_params = create_rw_signal(vec![HttpHashMapData::new()]);
+    let http_form_encoded = create_rw_signal(vec![HttpHashMapData::new()]);
     let http_form_data = create_rw_signal(vec![HttpFormData::new()]);
-    let http_headers = create_rw_signal(vec![HttpHeaders::new()]);
+    let http_headers = create_rw_signal(vec![HttpHashMapData::new()]);
     let url = create_rw_signal(String::new());
     let body_type = create_rw_signal(String::from("raw"));
     let method = create_rw_signal(String::from("POST"));
@@ -111,11 +65,11 @@ pub fn QuickRequest(
         url.set(v);
         let parsed_url = Url::parse(url.get().as_str()).expect("Failed to parse URL");
 
-        let mut temp: Vec<HttpHeaders> = vec![];
+        let mut temp: Vec<HttpHashMapData> = vec![];
         parsed_url.query_pairs()
             .for_each(|(key, value)| {
                 if !key.to_string().is_empty() {
-                    temp.push(HttpHeaders{ value: create_rw_signal(value.to_string()), key: create_rw_signal(key.to_string()) })
+                    temp.push(HttpHashMapData{ value: create_rw_signal(value.to_string()), key: create_rw_signal(key.to_string()) })
                 }
             });
         http_params.set(temp);
@@ -151,15 +105,15 @@ pub fn QuickRequest(
             }
 
             let args = to_value(&RequestArgs { 
-                formEncoded: encoded_map,
-                formData: "",
-                bodyType: body_type.get().as_str(),
+                form_encoded: encoded_map,
+                form_data: "",
+                body_type: body_type.get().as_str(),
                 url: &name,
                 method: method.get().as_str(),
                 body: body.get().as_str(),
                 headers: header_map
             }).unwrap();
-            console_log("unwrap Started call");
+
             // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
             match invoke("request", args).await.as_string() {
                 Some(new_msg)=>{
@@ -170,9 +124,9 @@ pub fn QuickRequest(
                 None =>{
                     console_error("Invoke failed");
                 }
-            }            
+            }
+            set_loader.set(false);
         });
-        set_loader.set(false);
     };
 
     let message = move || {
@@ -187,7 +141,7 @@ pub fn QuickRequest(
         if menu.get().eq("Body") {
             view! {
                 <div>
-                    <BodyComponent http_form_data body http_form_encoded menu=body_type/>
+                    <BodyComponent binary=http_binary http_form_data body http_form_encoded menu=body_type/>
                 </div>
             }
         } else if menu.get().eq("Headers") {
@@ -226,13 +180,20 @@ pub fn QuickRequest(
                 <div on:click = move |_|{ change_menu(String::from("Headers")); }>Headers</div>
                 <div on:click = move |_|{ change_menu(String::from("Body")); }>Body</div>
             </div>
-            {move || dynamic_component()}
+            <div class=style::request_div>
+                {move || dynamic_component()}
+            </div>
             <div>  
                 <Show
-                    when=move || { response.get().code != 0 }
-                    fallback=|| view! { <div></div> }
+                    when=move || { loader.get() == false }
+                    fallback=|| view! { <div>Loading...</div> }
                 >
-                    <Response response/>
+                    <Show
+                        when=move || { response.get().code != 0 }
+                        fallback=|| view! { <div></div> }
+                    >
+                        <Response response/>
+                    </Show>
                 </Show>
             </div>
         </div>

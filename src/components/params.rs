@@ -2,35 +2,19 @@ use std::collections::HashMap;
 
 use stylance::import_crate_style;
 use leptos::*;
-use url::Url;
 
-use crate::pages::quick::HttpHeaders;
+use crate::{models::http_models::HttpHashMapData, utils::url::{add_query_params, get_base_url}};
 import_crate_style!(style, "src/components/params.module.scss");
 
-fn add_query_params(base_url: &str, params: &HashMap<String, String>) -> String {
-    let mut url = Url::parse(base_url).expect("Failed to parse base URL");
 
-    // Add query parameters to the URL
-    for (key, value) in params {
-        url.query_pairs_mut().append_pair(&key, &value);
-    }
-    // Return the URL as a string
-    url.to_string()
-}
-
-fn get_base_url(url: String) -> String {
-    // Extract scheme, host, and path components
-    let url_list: Vec<&str> = url.split("?").collect();
-    return url_list.get(0).unwrap().to_string();
-}
 
 #[component]
 pub fn Params(
-    http_params: RwSignal<Vec<HttpHeaders>>, url: RwSignal<String>
+    http_params: RwSignal<Vec<HttpHashMapData>>, url: RwSignal<String>
 )->impl IntoView {
     let add_column = move|| {
         let mut new_value = http_params.get().clone();
-        new_value.push(HttpHeaders::new());
+        new_value.push(HttpHashMapData::new());
         http_params.set(new_value);
     };
 
@@ -48,7 +32,7 @@ pub fn Params(
     let handle_delete = move|index: usize|{
         let mut new_value = http_params.get().clone();
         if new_value.len() == 1 {
-            http_params.set(vec![HttpHeaders::new()])
+            http_params.set(vec![HttpHashMapData::new()])
         } else {
             new_value.remove(index-1);
             http_params.set(new_value);
