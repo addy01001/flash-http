@@ -19,6 +19,7 @@ hyper = "1.2.0"
 leptos_query = { version = "0.5.3", features = ["csr"] }
 leptos_reactive = "0.6.9"
 strum_macros = "0.26.2"
+leptos-use = "0.10.6"
 
 [workspace]
 members = ["src-tauri"]

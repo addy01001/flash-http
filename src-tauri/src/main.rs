@@ -15,13 +15,14 @@ mod models;
 mod schema;
 
 #[tauri::command]
-async fn get_history() -> String {
+async fn get_history(page: i64, size: i64) -> String {
     use self::schema::histories::dsl::histories;
     let connection = &mut estabilish_connection();
-    
+    let offset = (page - 1) * size;
     let list = histories
         .order_by(created_at.desc())
-        .limit(50)
+        .offset(offset)
+        .limit(size)
         .load::<History>(connection)
         .expect("Error loading users");
 

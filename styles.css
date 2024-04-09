@@ -1,6 +1,7 @@
 * {
   padding: 0;
   margin: 0;
+  font-size: 12px;
 }
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
@@ -36,7 +37,8 @@
 
 body {
   height: 100%;
-  overflow-y: hidden;
+  overflow: hidden;
+  width: 100%;
 }
 
 .row {
