@@ -9,7 +9,9 @@ env:
 
 jobs:
   build:
-    runs-on: addy01001/ubuntu_tauri_wasm:latest
+    runs-on: ubuntu-latest
+    container:
+      image: addy01001/ubuntu_tauri_wasm:latest
     steps:
     - uses: actions/checkout@v3
     - name: Rust Build
