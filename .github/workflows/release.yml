@@ -14,6 +14,8 @@ jobs:
       image: addy01001/ubuntu_tauri_wasm:latest
     steps:
     - uses: actions/checkout@v3
+    - name: Rustup latest
+      run: rustup default stable
     - name: Rust Build
       run: cargo build
     - name: Tauri Build
