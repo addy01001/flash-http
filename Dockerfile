@@ -20,4 +20,6 @@ RUN rustup target add wasm32-unknown-unknown
 RUN cargo install trunk
 RUN cargo install tauri-cli --version "^2.0.0-beta"
 RUN rustup default stable
+RUN apt -y install pkg-config
+ENV PKG_CONFIG_PATH=/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig
 
