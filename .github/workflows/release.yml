@@ -14,9 +14,9 @@ jobs:
       image: addy01001/ubuntu_tauri_wasm:latest
     steps:
     - uses: actions/checkout@v3
-    - name: Rustup latest
-      run: rustup default stable
-    - name: Add WASM target
-      run: rustup target add wasm32-unknown-unknown
-    - name: Tauri Build
-      run: cargo tauri build
+    - name: Cargo build
+      run: cargo build
+    # - name: Add WASM target
+    #   run: rustup target add wasm32-unknown-unknown
+    # - name: Tauri Build
+    #   run: cargo tauri build
